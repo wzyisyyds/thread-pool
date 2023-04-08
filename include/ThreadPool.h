@@ -19,6 +19,7 @@ typedef struct THREAD_TASK
 
 typedef struct THREAD_POOL
 {
+    PVOID self;
     atomic_flag ThreadPool_mode;
 
 
