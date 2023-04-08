@@ -39,7 +39,7 @@ typedef struct THREAD_POOL
 } Pool,*Ptr_Pool;
 
 
-INT_64 thread_pool_init_yexi(OUT Ptr_Pool ptr_thread_pool);
+INT_64 thread_pool_init_yexi(OUT PVOID ptr_thread_pool);
 
 
 
