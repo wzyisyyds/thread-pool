@@ -6,6 +6,8 @@
 #include <stdatomic.h>
 
 
+
+
 typedef struct THREAD_TASK
 {
     PVOID arg;
@@ -17,21 +19,24 @@ typedef struct THREAD_TASK
 
 typedef struct THREAD_POOL
 {
+    atomic_flag ThreadPool_mode;
+
+
+    atomic_flag Push_Spin_lock;
+    atomic_flag Pop_Spin_lock;
+
+    
+    UINT_64 Thread_max_size;
+    atomic_uint_fast64_t Thread_run_size;
     
     atomic_uint_fast64_t start;
     atomic_uint_fast64_t end;
-    UINT_64 task_size;    
+    
+    UINT_64 task_max_size;
+    atomic_uint_fast64_t task_size;    
+
     Ptr_Task task_arry;
 } Pool,*Ptr_Pool;
-
-
-
-
-
-
-
-
-
 
 
 
