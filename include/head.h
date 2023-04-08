@@ -1,6 +1,9 @@
 #ifndef HEAD_H
 #define HEAD_H
 
+#define IN
+
+#define OUT
 
 
 typedef signed char             INT_8,      *PINT_8;
