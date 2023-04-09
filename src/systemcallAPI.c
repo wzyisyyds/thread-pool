@@ -1,4 +1,5 @@
 #include "../include/systemcallAPI.h"
+#include <pthread.h>
 
 
 /*local structs*/
@@ -59,4 +60,11 @@ INT_64 yexi_cond_signal(PVOID prt_Mutex)
     Ptr_Mutex ptr =prt_Mutex;
     if (pthread_cond_signal(&ptr->cond)) {return YEXI_Statu_Unsuccess;}
     return YEXI_Statu_Success;
+}
+
+
+
+INT_64 yexi_thread_exit()
+{
+    pthread_exit(0);
 }

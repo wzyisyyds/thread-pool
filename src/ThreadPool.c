@@ -21,6 +21,8 @@ typedef struct THREAD_POOL
     PVOID self;
     atomic_flag ThreadPool_mode;
 
+    atomic_flag ThreadPool_KILL;
+
     atomic_flag push_Spin_lock;
     PVOID pop_mutex_lock;
     
@@ -45,6 +47,7 @@ typedef struct THREAD_POOL
 static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool);
 
 
+static INT_64 yexi_thread_task(IN PVOID ptr_thread_pool);
 
 
 
@@ -63,7 +66,11 @@ static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool)
     yexi_mutex_lock(local_pool->pop_mutex_lock);
     if (local_pool->task_size <=0 ) {
         yexi_mutex_unlock(local_pool->pop_mutex_lock);
-        yexi_cond_wait(local_pool->pop_mutex_lock);  
+        atomic_fetch_sub_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
+        yexi_cond_wait(local_pool->pop_mutex_lock);
+        yexi_mutex_unlock(local_pool->pop_mutex_lock);
+        atomic_fetch_add_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
+        return YEXI_Statu_Success;
     }
 
     UINT_64 start = atomic_fetch_add_explicit(&local_pool->start, 1, memory_order_acq_rel);
@@ -81,6 +88,23 @@ static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool)
     function(arg);
     return YEXI_Statu_Success;
 }
+
+static INT_64 yexi_thread_task(IN PVOID ptr_thread_pool)
+{
+    Ptr_Pool local_pool= ptr_thread_pool;
+    atomic_fetch_add_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
+    while (1) 
+    {
+
+    yexi_thread_pool_pop(local_pool);
+
+    if (local_pool->ThreadPool_KILL._Value) {yexi_thread_exit();}
+    
+    }
+    
+    return YEXI_Statu_Success;
+}
+
 
 /*open API*/
 
@@ -108,8 +132,8 @@ INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID fu
     local_pool->task_arry[end].task_fun=function;
     local_pool->task_arry[end].arg = arg;
     atomic_fetch_add_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
-    atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
     yexi_cond_signal(local_pool->pop_mutex_lock);
+    atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
     }
     return YEXI_Statu_Success;
 }
