@@ -16,7 +16,7 @@
 INT_64 yexi_thread_pool_init(OUT PVOID ptr_thread_pool);
 
 
-
+INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID function);
 
 
 #endif
