@@ -78,16 +78,14 @@ INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID fu
 
 
     UINT_64 end = atomic_fetch_add_explicit(&local_pool->end, 1, memory_order_acq_rel);
-    if (end == (local_pool->task_max_index)) {
-        atomic_exchange_explicit(&local_pool->end, 0, memory_order_acq_rel);
-        atomic_flag_clear(&local_pool->push_Spin_lock); 
-        return YEXI_Statu_Unsuccess;  
-    }
+    
+    if (end == (local_pool->task_max_index)) {atomic_exchange_explicit(&local_pool->end, 0, memory_order_acq_rel);}
+    
     local_pool->task_arry[end].task_fun=function;
     local_pool->task_arry[end].arg = arg;
     atomic_fetch_add_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
     atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
-
+    
     }
     return YEXI_Statu_Success;
 }
