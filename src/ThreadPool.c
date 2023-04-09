@@ -42,20 +42,45 @@ typedef struct THREAD_POOL
 
 
 /*local function*/
-
-static VOID Task_Thread();
-
+static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool);
 
 
 
 
 
-VOID Task_Thread()
+static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool)
 {
+    Ptr_Pool local_pool= ptr_thread_pool;
+    
+    PVOID arg;
+    VOID (*function)(PVOID tem_arg);
 
+    if (local_pool->ThreadPool_mode._Value){
+        //todo
+    }
+    else {
+    
+    yexi_mutex_lock(local_pool->pop_mutex_lock);
+    if (local_pool->task_size <=0 ) {
+        yexi_mutex_unlock(local_pool->pop_mutex_lock);
+        yexi_cond_wait(local_pool->pop_mutex_lock);  
+    }
+
+    UINT_64 start = atomic_fetch_add_explicit(&local_pool->start, 1, memory_order_acq_rel);
+    
+    if (start == (local_pool->task_max_index)) {atomic_exchange_explicit(&local_pool->start, 0, memory_order_acq_rel);}
+    
+    function=local_pool->task_arry[start].task_fun;
+    arg=local_pool->task_arry[start].arg;
+
+    atomic_fetch_sub_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
+    yexi_mutex_unlock(local_pool->pop_mutex_lock);
+
+    }
+
+    function(arg);
+    return YEXI_Statu_Success;
 }
-
-
 
 /*open API*/
 
@@ -67,7 +92,6 @@ INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID fu
         //todo
     }
     else {
-    
     
     while (atomic_flag_test_and_set(&local_pool->push_Spin_lock)) ;//Spin_lock
 
@@ -85,7 +109,7 @@ INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID fu
     local_pool->task_arry[end].arg = arg;
     atomic_fetch_add_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
     atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
-    
+    yexi_cond_signal(local_pool->pop_mutex_lock);
     }
     return YEXI_Statu_Success;
 }
