@@ -30,7 +30,7 @@ INT_64 yexi_cond_signal(PVOID prt_Mutex);
 
 INT_64 yexi_cond_signal(PVOID prt_Mutex);
 
-INT_64 yexi_thread_exit();
+VOID yexi_thread_exit();
 
 
 
