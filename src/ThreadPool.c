@@ -1,5 +1,7 @@
+
+
+
 #include "../include/ThreadPool.h"
-#include <stdatomic.h>
 
 
 
@@ -30,6 +32,7 @@ typedef struct THREAD_POOL
     atomic_uint_fast64_t end;
     
     UINT_64 task_max_size;
+    UINT_64 task_max_index;
     atomic_uint_fast64_t task_size;    
 
     Ptr_Task task_arry;
@@ -64,18 +67,29 @@ INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID fu
         //todo
     }
     else {
-        
-    while (atomic_flag_test_and_set(&local_pool->push_Spin_lock)) ;//Spin_lock
     
+    
+    while (atomic_flag_test_and_set(&local_pool->push_Spin_lock)) ;//Spin_lock
+
+    if (local_pool->task_size >= local_pool->task_max_size) { 
+        atomic_flag_clear(&local_pool->push_Spin_lock); 
+        return YEXI_Statu_Unsuccess;    
+    }
+
+
     UINT_64 end = atomic_fetch_add_explicit(&local_pool->end, 1, memory_order_acq_rel);
+    if (end == (local_pool->task_max_index)) {
+        atomic_exchange_explicit(&local_pool->end, 0, memory_order_acq_rel);
+        atomic_flag_clear(&local_pool->push_Spin_lock); 
+        return YEXI_Statu_Unsuccess;  
+    }
     local_pool->task_arry[end].task_fun=function;
     local_pool->task_arry[end].arg = arg;
     atomic_fetch_add_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
-
     atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
 
     }
-    return 0;
+    return YEXI_Statu_Success;
 }
 
 

@@ -1,15 +1,10 @@
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
 
-
-
 #include <stdatomic.h>
-
-
 
 #include "head.h"
 #include "systemcallAPI.h"
-
 
 
 /*------------API---------------------*/

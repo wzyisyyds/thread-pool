@@ -22,31 +22,41 @@ PVOID yexi_mutex_create()
 }
 
 
-VOID yexi_mutex_free(PVOID prt_Mutex)
+INT_64 yexi_mutex_free(PVOID prt_Mutex)
 {
+    if (!prt_Mutex) {return YEXI_Statu_Unsuccess;}
     free(prt_Mutex);
+    return YEXI_Statu_Success;
 }
 
-VOID yexi_mutex_lock(PVOID prt_Mutex)
+INT_64 yexi_mutex_lock(PVOID prt_Mutex)
 {
+    if (!prt_Mutex) {return YEXI_Statu_Unsuccess;}
     Ptr_Mutex ptr =prt_Mutex;
-    pthread_mutex_lock(&ptr->mutex);
+    if (pthread_mutex_lock(&ptr->mutex)) {return YEXI_Statu_Unsuccess;}
+    return YEXI_Statu_Success;
 }
 
-VOID yexi_mutex_unlock(PVOID prt_Mutex)
+INT_64 yexi_mutex_unlock(PVOID prt_Mutex)
 {
+    if (!prt_Mutex) {return YEXI_Statu_Unsuccess;}
     Ptr_Mutex ptr =prt_Mutex;
-    pthread_mutex_unlock(&ptr->mutex);
+    if (pthread_mutex_unlock(&ptr->mutex)) {return YEXI_Statu_Unsuccess;}
+    return YEXI_Statu_Success;
 }
 
-VOID yexi_cond_wait(PVOID prt_Mutex)
+INT_64 yexi_cond_wait(PVOID prt_Mutex)
 {
+    if (!prt_Mutex) {return YEXI_Statu_Unsuccess;}
     Ptr_Mutex ptr =prt_Mutex;
-    pthread_cond_wait(&ptr->cond,&ptr->mutex);
+    if (pthread_cond_wait(&ptr->cond,&ptr->mutex)) {return YEXI_Statu_Unsuccess;}
+    return YEXI_Statu_Success;
 }
 
-VOID yexi_cond_signal(PVOID prt_Mutex)
+INT_64 yexi_cond_signal(PVOID prt_Mutex)
 {
+    if (!prt_Mutex) {return YEXI_Statu_Unsuccess;}
     Ptr_Mutex ptr =prt_Mutex;
-    pthread_cond_signal(&ptr->cond);
+    if (pthread_cond_signal(&ptr->cond)) {return YEXI_Statu_Unsuccess;}
+    return YEXI_Statu_Success;
 }

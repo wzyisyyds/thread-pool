@@ -2,9 +2,11 @@
 #define HEAD_H
 
 #define IN
-
 #define OUT
 
+#define YEXI_Statu_Success 0
+
+#define YEXI_Statu_Unsuccess 1
 
 typedef signed char             INT_8,      *PINT_8;
 typedef unsigned char           UINT_8,     *PUINT_8;
