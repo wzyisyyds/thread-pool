@@ -20,7 +20,7 @@ typedef struct THREAD_POOL_DATA
 
 
 /*------------API---------------------*/
-INT_64 yexi_thread_pool_init(OUT PVOID ptr_thread_pool,IN Init_Thread_Pool_Data data);
+PVOID yexi_thread_pool_init(IN Init_Thread_Pool_Data data );
 
 
 INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID function);

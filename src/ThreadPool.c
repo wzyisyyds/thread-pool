@@ -109,7 +109,7 @@ static INT_64 yexi_thread_task(IN PVOID ptr_thread_pool)
 
 /*open API*/
 
-INT_64 yexi_thread_pool_init(OUT PVOID ptr_thread_pool,IN Init_Thread_Pool_Data data )
+PVOID yexi_thread_pool_init(IN Init_Thread_Pool_Data data )
 {
     Ptr_Pool pool=malloc(sizeof(Pool));
     pool->task_max_size=data.task_max_size;
@@ -122,6 +122,7 @@ INT_64 yexi_thread_pool_init(OUT PVOID ptr_thread_pool,IN Init_Thread_Pool_Data 
 
     pool->task_arry=malloc(sizeof(Task)*(pool->task_max_index+1));
     //todo
+    return pool->self;
 }
 
 
