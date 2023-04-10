@@ -2,6 +2,7 @@
 
 
 #include "../include/ThreadPool.h"
+#include <stdlib.h>
 
 
 
@@ -107,6 +108,22 @@ static INT_64 yexi_thread_task(IN PVOID ptr_thread_pool)
 
 
 /*open API*/
+
+INT_64 yexi_thread_pool_init(OUT PVOID ptr_thread_pool,IN Init_Thread_Pool_Data data )
+{
+    Ptr_Pool pool=malloc(sizeof(Pool));
+    pool->task_max_size=data.task_max_size;
+    pool->task_max_index=pool->task_max_size+1023;
+    pool->Thread_max_size=data.task_max_size;
+    pool->self=pool;
+    
+
+    pool->pop_mutex_lock=yexi_mutex_create();
+
+    pool->task_arry=malloc(sizeof(Task)*(pool->task_max_index+1));
+    //todo
+}
+
 
 INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID function)
 {
