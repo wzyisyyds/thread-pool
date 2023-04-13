@@ -2,8 +2,6 @@
 
 
 #include "../include/ThreadPool.h"
-#include <stdlib.h>
-
 
 
 /*local structs*/
@@ -20,6 +18,9 @@ typedef struct THREAD_TASK
 typedef struct THREAD_POOL
 {
     PVOID self;
+
+    pthread_t pthread_id[256];
+
     atomic_flag ThreadPool_mode;
 
     atomic_flag ThreadPool_KILL;
@@ -45,12 +46,6 @@ typedef struct THREAD_POOL
 
 
 /*local function*/
-static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool);
-
-
-static INT_64 yexi_thread_task(IN PVOID ptr_thread_pool);
-
-
 
 static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool)
 {
@@ -90,7 +85,7 @@ static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool)
     return YEXI_Statu_Success;
 }
 
-static INT_64 yexi_thread_task(IN PVOID ptr_thread_pool)
+static PVOID yexi_thread_task(IN PVOID ptr_thread_pool)
 {
     Ptr_Pool local_pool= ptr_thread_pool;
     atomic_fetch_add_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
@@ -102,7 +97,6 @@ static INT_64 yexi_thread_task(IN PVOID ptr_thread_pool)
     if (local_pool->ThreadPool_KILL._Value) {yexi_thread_exit();}
     
     }
-    
     return YEXI_Statu_Success;
 }
 
@@ -122,6 +116,9 @@ PVOID yexi_thread_pool_init(IN Init_Thread_Pool_Data data )
 
     pool->task_arry=malloc(sizeof(Task)*(pool->task_max_index+1));
     //todo
+    for (int i=0; i<pool->Thread_max_size; i++) {
+    pthread_create(&pool->pthread_id[i],NULL,yexi_thread_task,pool->self);
+    }
     return pool->self;
 }
 

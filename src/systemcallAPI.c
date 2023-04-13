@@ -68,3 +68,6 @@ VOID yexi_thread_exit()
 {
     pthread_exit(0);
 }
+
+
+
