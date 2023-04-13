@@ -115,7 +115,6 @@ PVOID yexi_thread_pool_init(IN Init_Thread_Pool_Data data )
     pool->pop_mutex_lock=yexi_mutex_create();
 
     pool->task_arry=malloc(sizeof(Task)*(pool->task_max_index+1));
-    //todo
     for (int i=0; i<pool->Thread_max_size; i++) {
     pthread_create(&pool->pthread_id[i],NULL,yexi_thread_task,pool->self);
     }
