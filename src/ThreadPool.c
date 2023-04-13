@@ -88,6 +88,7 @@ static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool)
 static PVOID yexi_thread_task(IN PVOID ptr_thread_pool)
 {
     pthread_detach(pthread_self());
+    
     Ptr_Pool local_pool= ptr_thread_pool;
     atomic_fetch_add_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
     while (1) 
