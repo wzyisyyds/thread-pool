@@ -69,5 +69,12 @@ VOID yexi_thread_exit()
     pthread_exit(0);
 }
 
+INT_32 yexi_pthread_create(pthread_t *thread,
+                   const pthread_attr_t *attr,
+                   void *(*start_routine) (void *),
+                   void *arg)
+{
+    return pthread_create(thread,attr,start_routine,arg);
+}
 
 
