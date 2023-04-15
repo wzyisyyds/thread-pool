@@ -54,31 +54,51 @@ static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool)
     PVOID arg;
     VOID (*function)(PVOID tem_arg);
 
+    Restart://loop
+
     if (local_pool->ThreadPool_mode._Value){
-        //todo
+        UINT_64 start = atomic_fetch_add_explicit(&local_pool->start, 1, memory_order_acq_rel);
+        if (start < (local_pool->task_max_index)) {
+            while (!local_pool->task_arry[start].task_ready._Value);
+            atomic_fetch_sub_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
+            function = local_pool->task_arry[start].task_fun;
+            arg = local_pool->task_arry[start].arg;
+            atomic_flag_clear(&local_pool->task_arry[start].task_ready);
+            
+        }else if (start == (local_pool->task_max_index)) {
+            atomic_exchange_explicit(&local_pool->start, 0, memory_order_acq_rel);
+        }else { goto Restart;   }
     }
     else {
     
-    yexi_mutex_lock(local_pool->pop_mutex_lock);
-    if (local_pool->task_size <=0 ) {
-        yexi_mutex_unlock(local_pool->pop_mutex_lock);
-        atomic_fetch_sub_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
-        yexi_cond_wait(local_pool->pop_mutex_lock);
-        yexi_mutex_unlock(local_pool->pop_mutex_lock);
-        atomic_fetch_add_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
-        return YEXI_Statu_Success;
-    }
+        yexi_mutex_lock(local_pool->pop_mutex_lock);
 
-    UINT_64 start = atomic_fetch_add_explicit(&local_pool->start, 1, memory_order_acq_rel);
-    
-    if (start == (local_pool->task_max_index)) {atomic_exchange_explicit(&local_pool->start, 0, memory_order_acq_rel);}
-    
-    function = local_pool->task_arry[start].task_fun;
-    arg = local_pool->task_arry[start].arg;
-    atomic_flag_clear(&local_pool->task_arry[start].task_ready);
-    atomic_fetch_sub_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
-    yexi_mutex_unlock(local_pool->pop_mutex_lock);
+        if (local_pool->task_size <=0 ) {
+            yexi_mutex_unlock(local_pool->pop_mutex_lock);
+            atomic_fetch_sub_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
+            yexi_cond_wait(local_pool->pop_mutex_lock);
+            yexi_mutex_unlock(local_pool->pop_mutex_lock);
+            atomic_fetch_add_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
+            return YEXI_Statu_Success;
+        }
 
+
+        UINT_64 start = atomic_fetch_add_explicit(&local_pool->start, 1, memory_order_acq_rel);
+        if (start < (local_pool->task_max_index)) {
+            while (!local_pool->task_arry[start].task_ready._Value);
+            atomic_fetch_sub_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
+            function = local_pool->task_arry[start].task_fun;
+            arg = local_pool->task_arry[start].arg;
+            atomic_flag_clear(&local_pool->task_arry[start].task_ready);
+        }else if (start == (local_pool->task_max_index)) {
+            atomic_exchange_explicit(&local_pool->start, 0, memory_order_acq_rel);
+            yexi_mutex_unlock(local_pool->pop_mutex_lock);
+            return YEXI_Statu_Unsuccess;
+        }else { 
+            yexi_mutex_unlock(local_pool->pop_mutex_lock);
+            return YEXI_Statu_Unsuccess;
+        }
+        yexi_mutex_unlock(local_pool->pop_mutex_lock);
     }
 
     function(arg);
@@ -131,32 +151,58 @@ PVOID yexi_thread_pool_init(IN Init_Thread_Pool_Data data )
 
 INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID function)
 {
+
     Ptr_Pool local_pool= ptr_thread_pool;
-    
+
+    Restart://loop
+
     if (local_pool->ThreadPool_mode._Value){
-        //todo
+
+        if (local_pool->task_size < local_pool->task_max_size) { 
+            UINT_64 end = atomic_fetch_add_explicit(&local_pool->end, 1, memory_order_acq_rel);
+            if (end < (local_pool->task_max_index)) {
+                local_pool->task_arry[end].task_fun=function;
+                local_pool->task_arry[end].arg = arg;
+                atomic_flag_test_and_set(&local_pool->task_arry[end].task_ready);
+                atomic_fetch_add_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
+            }
+            else if (end == (local_pool->task_max_index)) {
+                atomic_exchange_explicit(&local_pool->end, 0, memory_order_acq_rel);
+                goto Restart;
+            }
+            else { goto Restart;}
+
+        }else {return YEXI_Statu_Unsuccess;}
     }
     else {
-    
-    while (atomic_flag_test_and_set(&local_pool->push_Spin_lock)) ;//Spin_lock
 
-    if (local_pool->task_size >= local_pool->task_max_size) { 
-        atomic_flag_clear(&local_pool->push_Spin_lock); 
-        return YEXI_Statu_Unsuccess;    
-    }
+        while (atomic_flag_test_and_set(&local_pool->push_Spin_lock)) ;//Spin_lock
+        
+        if (local_pool->task_size < local_pool->task_max_size) { 
+            UINT_64 end = atomic_fetch_add_explicit(&local_pool->end, 1, memory_order_acq_rel);
+            if (end < (local_pool->task_max_index)) {
+                local_pool->task_arry[end].task_fun=function;
+                local_pool->task_arry[end].arg = arg;
+                atomic_flag_test_and_set(&local_pool->task_arry[end].task_ready);
+                atomic_fetch_add_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
 
+                yexi_cond_signal(local_pool->pop_mutex_lock);
+                atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
+            }
+            else if (end == (local_pool->task_max_index)) {
+                atomic_exchange_explicit(&local_pool->end, 0, memory_order_acq_rel);
+                atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
+                goto Restart;
+            }
+            else { 
+                atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
+                goto Restart;
+            }
+        }else {
+            atomic_flag_clear(&local_pool->push_Spin_lock); 
+            return YEXI_Statu_Unsuccess;  
+        }
 
-    UINT_64 end = atomic_fetch_add_explicit(&local_pool->end, 1, memory_order_acq_rel);
-    
-    if (end == (local_pool->task_max_index)) {atomic_exchange_explicit(&local_pool->end, 0, memory_order_acq_rel);}
-    
-    local_pool->task_arry[end].task_fun=function;
-    local_pool->task_arry[end].arg = arg;
-
-    atomic_fetch_add_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
-    atomic_flag_test_and_set(&local_pool->task_arry[end].task_ready);
-    yexi_cond_signal(local_pool->pop_mutex_lock);
-    atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
     }
     return YEXI_Statu_Success;
 }
