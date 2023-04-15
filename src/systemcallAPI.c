@@ -1,6 +1,4 @@
 #include "../include/systemcallAPI.h"
-#include <pthread.h>
-
 
 /*local structs*/
 typedef struct Mutex_Struct
@@ -63,18 +61,17 @@ INT_64 yexi_cond_signal(PVOID prt_Mutex)
 }
 
 
-
 VOID yexi_thread_exit()
 {
     pthread_exit(0);
 }
 
-INT_32 yexi_pthread_create(pthread_t *thread,
-                   const pthread_attr_t *attr,
-                   void *(*start_routine) (void *),
-                   void *arg)
+
+VOID yexi_pthread_create_and_detach(void *(*start_routine) (void *),  void *arg)
 {
-    return pthread_create(thread,attr,start_routine,arg);
+    pthread_t thread;
+    INT_32 ret=pthread_create(&thread,NULL,start_routine,arg);
+    pthread_detach(thread);
 }
 
 

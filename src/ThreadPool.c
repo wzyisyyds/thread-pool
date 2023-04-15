@@ -107,7 +107,7 @@ static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool)
 
 static PVOID yexi_thread_task(IN PVOID ptr_thread_pool)
 {
-    pthread_detach(pthread_self());
+    
 
     Ptr_Pool local_pool= ptr_thread_pool;
     atomic_fetch_add_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
@@ -143,7 +143,7 @@ PVOID yexi_thread_pool_init(IN Init_Thread_Pool_Data data )
 
 
     for (int i=0; i<pool->Thread_max_size; i++) {
-    yexi_pthread_create(&pool->pthread_id[i],NULL,yexi_thread_task,pool->self);
+    yexi_pthread_create_and_detach(yexi_thread_task,pool->self);
     }
     return pool->self;
 }
