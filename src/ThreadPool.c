@@ -114,11 +114,11 @@ static PVOID yexi_thread_task(IN PVOID ptr_thread_pool)
     while (1) 
     {
 
-    yexi_thread_pool_pop(local_pool);
+        yexi_thread_pool_pop(local_pool);
 
-    if (local_pool->ThreadPool_KILL._Value) {
-        atomic_fetch_sub_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
-        yexi_thread_exit();
+        if (local_pool->ThreadPool_KILL._Value) {
+            atomic_fetch_sub_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
+            yexi_thread_exit();
         }
     
     }
