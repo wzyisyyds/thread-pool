@@ -3,16 +3,10 @@
 
 #include "stdlib.h"
 
-
 #include <pthread.h>
 #include <unistd.h>
 
-
-
-
 #include "head.h"
-
-
 
 /*------------API--------------*/
 
@@ -32,6 +26,6 @@ INT_64 yexi_cond_signal(PVOID prt_Mutex);
 
 VOID yexi_thread_exit();
 
-VOID yexi_pthread_create_and_detach(void *(*start_routine) (void *),void *arg);
+VOID yexi_pthread_create_and_detach(void *(*start_routine)(void *), void *arg);
 
 #endif
