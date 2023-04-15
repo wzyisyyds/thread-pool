@@ -184,4 +184,5 @@ Restart: // loop
 }
 
 INT_64 yexi_thread_pool_free(IN PVOID ptr_thread_pool) {
+    return YEXI_Statu_Success;
 }
