@@ -75,7 +75,7 @@ static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool)
     
     function = local_pool->task_arry[start].task_fun;
     arg = local_pool->task_arry[start].arg;
-
+    atomic_flag_clear(&local_pool->task_arry[start].task_ready);
     atomic_fetch_sub_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
     yexi_mutex_unlock(local_pool->pop_mutex_lock);
 
@@ -96,7 +96,10 @@ static PVOID yexi_thread_task(IN PVOID ptr_thread_pool)
 
     yexi_thread_pool_pop(local_pool);
 
-    if (local_pool->ThreadPool_KILL._Value) {yexi_thread_exit();}
+    if (local_pool->ThreadPool_KILL._Value) {
+        atomic_fetch_sub_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
+        yexi_thread_exit();
+        }
     
     }
     return YEXI_Statu_Success;
@@ -151,7 +154,7 @@ INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg ,IN PVOID fu
     local_pool->task_arry[end].arg = arg;
 
     atomic_fetch_add_explicit(&local_pool->task_size, 1, memory_order_acq_rel);
-
+    atomic_flag_test_and_set(&local_pool->task_arry[end].task_ready);
     yexi_cond_signal(local_pool->pop_mutex_lock);
     atomic_flag_clear(&local_pool->push_Spin_lock);//unlock
     }
