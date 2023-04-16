@@ -49,8 +49,7 @@ INT_64 yexi_cond_signal(PVOID prt_Mutex) {
     return YEXI_Statu_Success;
 }
 
-INT_64 yexi_cond_broadcast(PVOID prt_Mutex)
-{
+INT_64 yexi_cond_broadcast(PVOID prt_Mutex) {
     if (!prt_Mutex) { return YEXI_Statu_Unsuccess; }
     Ptr_Mutex ptr = prt_Mutex;
     if (pthread_cond_broadcast(&ptr->cond)) { return YEXI_Statu_Unsuccess; }

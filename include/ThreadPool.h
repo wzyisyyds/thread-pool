@@ -11,6 +11,8 @@ typedef struct THREAD_POOL_DATA {
 
     UINT_64 task_max_size;
 
+    UINT_64 task_fast_size;
+    UINT_64 task_slow_size;
 } Init_Thread_Pool_Data, *Ptr_Init_Thread_Pool_Data;
 
 /*------------API---------------------*/

@@ -1,6 +1,4 @@
 #include "../include/ThreadPool.h"
-#include <stdatomic.h>
-#include <stdlib.h>
 
 /*local structs*/
 
@@ -27,6 +25,9 @@ typedef struct THREAD_POOL {
 
     atomic_uint_fast64_t start;
     atomic_uint_fast64_t end;
+
+    UINT_64 task_fast_size;
+    UINT_64 task_slow_size;
 
     UINT_64 task_max_size;
     UINT_64 task_max_index;
@@ -103,6 +104,9 @@ static PVOID yexi_thread_task(IN PVOID ptr_thread_pool) {
     while (1) {
         yexi_thread_pool_pop(local_pool);
 
+        if (local_pool->task_size < local_pool->task_slow_size) {
+            atomic_flag_clear(&local_pool->ThreadPool_mode);
+        }
         if (local_pool->ThreadPool_KILL._Value) {
             atomic_fetch_sub_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
             atomic_fetch_sub_explicit(&local_pool->Thread_size, 1, memory_order_acq_rel);
@@ -116,6 +120,8 @@ static PVOID yexi_thread_task(IN PVOID ptr_thread_pool) {
 
 PVOID yexi_thread_pool_init(IN Init_Thread_Pool_Data data) {
     Ptr_Pool pool = malloc(sizeof(Pool));
+    pool->task_fast_size = data.task_fast_size;
+    pool->task_slow_size = data.task_slow_size;
     pool->task_max_size = data.task_max_size;
     pool->task_max_index = pool->task_max_size + 1023;
     pool->Thread_max_size = data.task_max_size;
@@ -183,6 +189,10 @@ Restart: // loop
             atomic_flag_clear(&local_pool->push_Spin_lock);
             return YEXI_Statu_Unsuccess;
         }
+    }
+
+    if (local_pool->task_size > local_pool->task_fast_size) {
+        atomic_flag_test_and_set(&local_pool->ThreadPool_mode);
     }
     return YEXI_Statu_Success;
 }
