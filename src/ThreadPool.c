@@ -1,5 +1,3 @@
-
-
 #include "../include/ThreadPool.h"
 
 /*local structs*/
@@ -42,7 +40,7 @@ static INT_64 yexi_thread_pool_pop(IN PVOID ptr_thread_pool) {
     Ptr_Pool local_pool = ptr_thread_pool;
 
     PVOID arg;
-    VOID (*function)
+    VOID(*function)
     (PVOID);
 
 Restart: // loop
