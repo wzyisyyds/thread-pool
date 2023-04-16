@@ -1,4 +1,6 @@
 #include "../include/ThreadPool.h"
+#include <stdatomic.h>
+#include <stdlib.h>
 
 /*local structs*/
 
@@ -12,8 +14,6 @@ typedef struct THREAD_TASK {
 typedef struct THREAD_POOL {
     PVOID self;
 
-    pthread_t pthread_id[256];
-
     atomic_flag ThreadPool_mode;
 
     atomic_flag ThreadPool_KILL;
@@ -22,6 +22,7 @@ typedef struct THREAD_POOL {
     PVOID pop_mutex_lock;
 
     UINT_64 Thread_max_size;
+    atomic_uint_fast64_t Thread_size;
     atomic_uint_fast64_t Thread_run_size;
 
     atomic_uint_fast64_t start;
@@ -97,12 +98,14 @@ Restart: // loop
 
 static PVOID yexi_thread_task(IN PVOID ptr_thread_pool) {
     Ptr_Pool local_pool = ptr_thread_pool;
+    atomic_fetch_add_explicit(&local_pool->Thread_size, 1, memory_order_acq_rel);
     atomic_fetch_add_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
     while (1) {
         yexi_thread_pool_pop(local_pool);
 
         if (local_pool->ThreadPool_KILL._Value) {
             atomic_fetch_sub_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
+            atomic_fetch_sub_explicit(&local_pool->Thread_size, 1, memory_order_acq_rel);
             yexi_thread_exit();
         }
     }
@@ -132,6 +135,9 @@ INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg, IN PVOID fu
     Ptr_Pool local_pool = ptr_thread_pool;
 
 Restart: // loop
+    if (local_pool->ThreadPool_KILL._Value) {
+        return YEXI_Statu_Unsuccess;
+    }
 
     if (local_pool->ThreadPool_mode._Value) {
         if (local_pool->task_size < local_pool->task_max_size) {
@@ -182,5 +188,17 @@ Restart: // loop
 }
 
 INT_64 yexi_thread_pool_free(IN PVOID ptr_thread_pool) {
+    Ptr_Pool local_pool = ptr_thread_pool;
+
+    atomic_flag_test_and_set(&local_pool->ThreadPool_KILL);
+    while (local_pool->Thread_size != 0) {
+        yexi_cond_broadcast(local_pool->pop_mutex_lock);
+        sleep(5);
+    }
+
+    yexi_mutex_free(local_pool->pop_mutex_lock);
+
+    free(local_pool->task_arry);
+    free(local_pool->self);
     return YEXI_Statu_Success;
 }
