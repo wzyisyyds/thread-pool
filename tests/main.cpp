@@ -15,6 +15,7 @@ int main()
     data.task_fast_size=16;
     data.task_fast_size=16;
     data.task_slow_size=10;
+    data.task_slow_size=10;
     data.task_max_size=128;
     PVOID thread_pool=yexi_thread_pool_init(data);
     
