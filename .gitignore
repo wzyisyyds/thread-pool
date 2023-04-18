@@ -11,3 +11,5 @@ CTestTestfile.cmake
 _deps
 .cache
 build
+bin
+lib/libYEXI_ThreadPool.a
