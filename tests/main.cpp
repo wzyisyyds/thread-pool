@@ -17,6 +17,8 @@ int main()
     data.task_max_size=128;
     PVOID thread_pool=yexi_thread_pool_init(data);
     
+
+    
     yexi_thread_pool_free(thread_pool);
     std::cout<<"hello word"<<std::endl;
     return 0;
