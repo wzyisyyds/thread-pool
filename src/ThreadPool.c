@@ -124,7 +124,7 @@ PVOID yexi_thread_pool_init(IN Init_Thread_Pool_Data data) {
     pool->task_slow_size = data.task_slow_size;
     pool->task_max_size = data.task_max_size;
     pool->task_max_index = pool->task_max_size + 1023;
-    pool->Thread_max_size = data.task_max_size;
+    pool->Thread_max_size = data.Thread_max_size;
     pool->self = pool;
 
     pool->pop_mutex_lock = yexi_mutex_create();
