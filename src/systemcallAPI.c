@@ -39,6 +39,7 @@ INT_64 yexi_cond_wait(PVOID prt_Mutex) {
     if (!prt_Mutex) { return YEXI_Statu_Unsuccess; }
     Ptr_Mutex ptr = prt_Mutex;
     if (pthread_cond_wait(&ptr->cond, &ptr->mutex)) { return YEXI_Statu_Unsuccess; }
+    yexi_mutex_unlock(ptr);
     return YEXI_Statu_Success;
 }
 

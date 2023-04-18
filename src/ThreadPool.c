@@ -1,5 +1,6 @@
 #include "../include/ThreadPool.h"
 
+
 /*local structs*/
 
 typedef struct THREAD_TASK {
@@ -69,7 +70,6 @@ Restart: // loop
             yexi_mutex_unlock(local_pool->pop_mutex_lock);
             atomic_fetch_sub_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
             yexi_cond_wait(local_pool->pop_mutex_lock);
-            yexi_mutex_unlock(local_pool->pop_mutex_lock);
             atomic_fetch_add_explicit(&local_pool->Thread_run_size, 1, memory_order_acq_rel);
             return YEXI_Statu_Success;
         }
@@ -137,7 +137,7 @@ PVOID yexi_thread_pool_init(IN Init_Thread_Pool_Data data) {
     return pool->self;
 }
 
-INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN PVOID arg, IN PVOID function) {
+INT_64 yexi_thread_pool_push(IN PVOID ptr_thread_pool, IN VOID (*function)(PVOID), IN PVOID arg) {
     Ptr_Pool local_pool = ptr_thread_pool;
 
 Restart: // loop
@@ -199,7 +199,10 @@ Restart: // loop
 
 INT_64 yexi_thread_pool_free(IN PVOID ptr_thread_pool) {
     Ptr_Pool local_pool = ptr_thread_pool;
-
+    sleep(3);
+    while (local_pool->task_size != 0) {
+        
+    };
     atomic_flag_test_and_set(&local_pool->ThreadPool_KILL);
     while (local_pool->Thread_size != 0) {
         yexi_cond_broadcast(local_pool->pop_mutex_lock);
