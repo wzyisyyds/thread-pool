@@ -1,6 +1,5 @@
 .cache
-build/*
-bin/*
+build
+bin
 lib/libYEXI_ThreadPool.a
 .vscode
-!build/Makefile
