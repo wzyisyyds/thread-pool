@@ -97,19 +97,20 @@ int main() {
                 printf("1：等待线程失败");
             }
         }
-        
+
         //阻塞等待任务全部结束。
         Ptr_Pool local_pool = (Ptr_Pool)thread_pool;
         while (local_pool->task_size != 0) {
             sleep(5);
         };
-
-        yexi_thread_pool_free(thread_pool);
+        
     }
 
     // Stop measuring time and calculate the elapsed time
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+
+    yexi_thread_pool_free(thread_pool);
 
     printf("Time measured: %.3f seconds.\n", elapsed.count() * 1e-9);
 
