@@ -198,8 +198,7 @@ Restart: // loop
 
 INT_64 yexi_thread_pool_free(IN PVOID ptr_thread_pool) {
     Ptr_Pool local_pool = ptr_thread_pool;
-    while (local_pool->task_size != 0) {
-    };
+    
     atomic_flag_test_and_set(&local_pool->ThreadPool_KILL);
     while (local_pool->Thread_size != 0) {
         yexi_cond_broadcast(local_pool->pop_mutex_lock);
