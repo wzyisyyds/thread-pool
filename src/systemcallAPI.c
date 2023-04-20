@@ -66,3 +66,4 @@ VOID yexi_pthread_create_and_detach(void *(*start_routine)(void *), void *arg) {
     INT_32 ret = pthread_create(&thread, NULL, start_routine, arg);
     pthread_detach(thread);
 }
+

@@ -29,6 +29,7 @@ AllowAllParametersOfDeclarationOnNextLine: false
 # 不允许短的块放在同一行
 AllowShortBlocksOnASingleLine: true
 
+
 # 允许短的case标签放在同一行
 AllowShortCaseLabelsOnASingleLine: true
 
